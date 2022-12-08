@@ -68,3 +68,21 @@ exports.Login = async (req, res, next) => {
     }
   }
 };
+
+exports.getUsers = async (req, res, next) => {
+  try {
+    const user = await User.find({})
+    if(user){
+      res.status(200).json({user})
+    }else {
+      throw new Error();
+    }
+  } catch (error) {
+    if (error) {
+      return res.json({
+        success: false,
+        errors: "No details found",
+      });
+    }
+  }
+}
