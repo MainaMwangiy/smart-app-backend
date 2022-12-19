@@ -4,32 +4,31 @@ const bcrypt = require("bcryptjs");
 
 exports.Register = async (req, res, next) => {
   try {
+    const salt = await bcrypt.genSalt(10);
     let user = new User({
       email: req.body.email,
-      password: bcrypt.hashSync(req.body.password, 8),
+      password: bcrypt.hashSync(req.body.password, salt),
       deleted: false,
     });
     user
       .save()
       .then((user) => {
-        res
-          .status(201)
-          .json({
-            responseStatusCode: 201,
-            responseDescription: "User was created successfully",
-            data: user,
-          });
+        res.status(201).json({
+          sucess: true,
+          message: "Added successfully",
+          responseStatusCode: 201,
+          responseDescription: "User was created successfully",
+          data: user,
+        });
       })
       .catch((err) => {
         console.log(err);
-        res
-          .status(401)
-          .json({
-            responseStatusCode: 401,
-            responseDescription:
-              "Client side error, check on your request body",
-            data: err,
-          });
+        res.status(401).json({
+          sucess: false,
+          responseStatusCode: 401,
+          responseDescription: "Client side error, check on your request body",
+          data: err,
+        });
       });
   } catch (error) {
     if (error) {
@@ -48,16 +47,22 @@ exports.Login = async (req, res, next) => {
     const userpassword = req.body.password;
     const user = await User.findOne({ email: useremail });
     const { id, email } = user;
-    const valid = bcrypt.compare(
-      userpassword,
-      user.password
-    );
-    if (valid) {
-      const token = jwt.sign({ id, email }, process.env.SECRET);
-
-      res.status(200).json({ id, email, token });
-    } else {
-      throw new Error();
+    if (user) {
+      const valid = await bcrypt.compareSync(userpassword, user.password);
+      if (valid) {
+        const token = jwt.sign({ id, email }, process.env.SECRET);
+        res.status(200).json({
+          success: true,
+          message: "Logged In Successfully",
+          id,
+          email,
+          token,
+        });
+      } else {
+        res
+          .status(500)
+          .json({ success: false, message: "Input correct password" });
+      }
     }
   } catch (error) {
     if (error) {
@@ -71,10 +76,10 @@ exports.Login = async (req, res, next) => {
 
 exports.getUsers = async (req, res, next) => {
   try {
-    const user = await User.find({})
-    if(user){
-      res.status(200).json({user})
-    }else {
+    const user = await User.find({});
+    if (user) {
+      res.status(200).json({ user });
+    } else {
       throw new Error();
     }
   } catch (error) {
@@ -85,4 +90,5 @@ exports.getUsers = async (req, res, next) => {
       });
     }
   }
-}
+};
+
