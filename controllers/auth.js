@@ -92,3 +92,51 @@ exports.getUsers = async (req, res, next) => {
   }
 };
 
+exports.getAllSoftDeletedUsers = async (req, res) => {
+  User.find()
+    .where("deleted")
+    .equals(true)
+    .then((data) => {
+      res
+        .status(200)
+        .json({
+          responseStatusCode: 200,
+          responseDescription: "users fetch success!",
+          data: data,
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      res
+        .status(200)
+        .json({
+          responseStatusCode: 500,
+          responseDescription:
+            "we encountered an error while fetching the users!",
+          error: err,
+        });
+    });
+};
+
+exports.softDeleteUsers = async (req, res, next) => {
+  let deleteReqBody = {
+    deleted: true,
+  };
+  User.findByIdAndUpdate({ _id: req.body.id }, deleteReqBody)
+    .then((data) => {
+      res.status(200).json({
+        responseStatusCode: 200,
+        responseDescription: "User soft deleted successfully!",
+        data: data,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(200).json({
+        responseStatusCode: 500,
+        responseDescription:
+          "we encountered an error while deleting the user! supply a correct ID",
+        error: err,
+      });
+    });
+};
