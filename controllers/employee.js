@@ -43,19 +43,68 @@ exports.Employee = async (req, res, next) => {
 };
 
 exports.getEmployees = async (req, res, next) => {
-    try {
-      const employee = await Employee.find({})
-      if(employee){
-        res.status(200).json({employee})
-      }else {
-        throw new Error();
-      }
-    } catch (error) {
-      if (error) {
-        return res.json({
-          success: false,
-          errors: "No details found",
-        });
-      }
+  try {
+    const employee = await Employee.find({}).where("deleted").equals(false)
+    if (employee) {
+      res.status(200).json({ employee })
+    } else {
+      throw new Error();
+    }
+  } catch (error) {
+    if (error) {
+      return res.json({
+        success: false,
+        errors: "No details found",
+      });
     }
   }
+}
+
+exports.getAllDeletedEmployees = async (req, res) => {
+  Employee.find()
+    .where("deleted")
+    .equals(true)
+    .then((data) => {
+      res
+        .status(200)
+        .json({
+          responseStatusCode: 200,
+          responseDescription: "Employees fetch success!",
+          data: data,
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      res
+        .status(200)
+        .json({
+          responseStatusCode: 500,
+          responseDescription:
+            "we encountered an error while fetching the Employees!",
+          error: err,
+        });
+    });
+};
+
+exports.softDeleteEnployees = async (req, res, next) => {
+  let deleteReqBody = {
+    deleted: true,
+  };
+  Employee.findByIdAndUpdate({ _id: req.body.id }, deleteReqBody)
+    .then((data) => {
+      res.status(200).json({
+        responseStatusCode: 200,
+        responseDescription: "Employee soft deleted successfully!",
+        data: data,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(200).json({
+        responseStatusCode: 500,
+        responseDescription:
+          "we encountered an error while deleting the employee! supply a correct ID",
+        error: err,
+      });
+    });
+};
